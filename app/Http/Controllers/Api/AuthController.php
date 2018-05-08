@@ -3,6 +3,10 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Tymon\JWTAuth\JWTAuth;
+use App\User;
+use JWTFactory;
+use Validator;
+
 class AuthController extends Controller
 {
     /**
@@ -13,6 +17,27 @@ class AuthController extends Controller
     public function __construct(JWTAuth $jwtAuth)
     {
         $this->jwtAuth = $jwtAuth;
+    }
+
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required',
+            'password'=> 'required'
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+        $user = User::create([
+            'name' => $request->get('name'),
+            'email' => $request->get('email'),
+            'password' => bcrypt($request->get('password')),
+        ]);
+
+        // $token = JWTAuth::fromUser($user);
+        
+        return Response::json(compact('user'));
     }
 
     public function login(Request $request)
